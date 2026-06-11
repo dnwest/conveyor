@@ -1,5 +1,5 @@
-import { SQSClient } from "@aws-sdk/client-sqs";
-import type { Env } from "../config/env";
+import { SQSClient } from '@aws-sdk/client-sqs';
+import type { Env } from '../config/env';
 
 export function createSqsClient(env: Env): SQSClient {
   return new SQSClient({

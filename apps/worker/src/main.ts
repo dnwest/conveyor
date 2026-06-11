@@ -1,12 +1,12 @@
-import { createSqsClient } from "./aws/sqs-client";
-import { loadEnv } from "./config/env";
-import { createLogger } from "./logger";
-import { SqsConsumer } from "./messaging/sqs-consumer";
-import { OrderProcessor } from "./processing/order-processor";
+import { createSqsClient } from './aws/sqs-client';
+import { loadEnv } from './config/env';
+import { createLogger } from './logger';
+import { SqsConsumer } from './messaging/sqs-consumer';
+import { OrderProcessor } from './processing/order-processor';
 
 async function main(): Promise<void> {
   const env = loadEnv();
-  const logger = createLogger(env.LOG_LEVEL, env.NODE_ENV !== "production");
+  const logger = createLogger(env.LOG_LEVEL, env.NODE_ENV !== 'production');
   const client = createSqsClient(env);
 
   const processor = new OrderProcessor(
@@ -31,11 +31,11 @@ async function main(): Promise<void> {
   );
 
   const shutdown = (signal: string): void => {
-    logger.info({ signal }, "received shutdown signal");
+    logger.info({ signal }, 'received shutdown signal');
     consumer.stop();
   };
-  process.on("SIGTERM", () => shutdown("SIGTERM"));
-  process.on("SIGINT", () => shutdown("SIGINT"));
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
 
   await consumer.start();
 }

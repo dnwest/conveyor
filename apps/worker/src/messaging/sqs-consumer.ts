@@ -3,8 +3,8 @@ import {
   ReceiveMessageCommand,
   type Message,
   type SQSClient,
-} from "@aws-sdk/client-sqs";
-import type { Logger } from "pino";
+} from '@aws-sdk/client-sqs';
+import type { Logger } from 'pino';
 
 export interface ConsumerOptions {
   queueUrl: string;
@@ -27,13 +27,13 @@ export class SqsConsumer {
 
   async start(): Promise<void> {
     this.running = true;
-    this.logger.info({ queueUrl: this.options.queueUrl }, "consumer started");
+    this.logger.info({ queueUrl: this.options.queueUrl }, 'consumer started');
 
     while (this.running) {
       await this.poll();
     }
 
-    this.logger.info("consumer stopped");
+    this.logger.info('consumer stopped');
   }
 
   stop(): void {
@@ -50,12 +50,12 @@ export class SqsConsumer {
           MaxNumberOfMessages: this.options.maxMessages,
           WaitTimeSeconds: this.options.waitTimeSeconds,
           VisibilityTimeout: this.options.visibilityTimeoutSeconds,
-          MessageAttributeNames: ["All"],
+          MessageAttributeNames: ['All'],
         }),
       );
       messages = result.Messages ?? [];
     } catch (error) {
-      this.logger.error({ err: error }, "failed to receive messages");
+      this.logger.error({ err: error }, 'failed to receive messages');
       return;
     }
 
@@ -76,7 +76,7 @@ export class SqsConsumer {
     } catch (error) {
       this.logger.error(
         { err: error, messageId: message.MessageId },
-        "message processing failed; leaving it for SQS redrive",
+        'message processing failed; leaving it for SQS redrive',
       );
     }
   }

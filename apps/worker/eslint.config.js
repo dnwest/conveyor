@@ -1,1 +1,1 @@
-export { default } from "@conveyor/config/eslint";
+export { default } from '@conveyor/config/eslint';
