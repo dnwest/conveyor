@@ -35,7 +35,7 @@ operates it, sharing typed contracts. The goal is to demonstrate, end to end:
 └─────┬──────┘             └───────────┘             └─────┬──────┘
       │ REST + Swagger                                     │ metrics/events
       ▼                                                    ▼
-┌──────────────────────────── Postgres ───────────────────────────┐
+┌──────────────────────────── Postgres ────────────────────────────┐
 │  orders · processing log · dead letters · metrics                │
 └──────────────────────────────────────────────────────────────────┘
       ▲
@@ -89,7 +89,7 @@ These are the things the project is built to demonstrate well:
 ## Roadmap
 
 - [x] Monorepo scaffold (pnpm + Turborepo, shared `core` package)
-- [ ] `worker`: SQS/SNS consumer with retries, backoff, DLQ
+- [x] `worker`: SQS/SNS consumer with retries, backoff, DLQ
 - [ ] `worker`: circuit breaker + idempotency + structured logging
 - [ ] `api`: NestJS REST + Swagger (submit orders, read status/metrics, DLQ ops)
 - [ ] Postgres schema + migrations (orders, processing log, dead letters, metrics)
