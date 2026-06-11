@@ -34,6 +34,15 @@ TOPIC_ARN=$(awslocal sns list-topics \
   --query "Topics[?contains(TopicArn, ':${TOPIC_NAME}')].TopicArn" \
   --output text --region "$REGION")
 
+# Grant the SNS topic permission to deliver into the queue; SNS->SQS delivery
+# silently drops messages without this policy.
+QUEUE_POLICY="{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"sns.amazonaws.com\"},\"Action\":\"sqs:SendMessage\",\"Resource\":\"${QUEUE_ARN}\",\"Condition\":{\"ArnEquals\":{\"aws:SourceArn\":\"${TOPIC_ARN}\"}}}]}"
+python3 -c 'import json, sys; open("/tmp/queue-policy.json", "w").write(json.dumps({"Policy": sys.argv[1]}))' "$QUEUE_POLICY"
+awslocal sqs set-queue-attributes \
+  --queue-url "$(queue_url "$QUEUE_NAME")" \
+  --attributes file:///tmp/queue-policy.json \
+  --region "$REGION"
+
 awslocal sns subscribe \
   --topic-arn "$TOPIC_ARN" \
   --protocol sqs \
