@@ -6,9 +6,10 @@ import type { OrderRepository } from '../../core/ports/order.repository';
 import { CreateOrderUseCase } from '../../core/use-cases/create-order.use-case';
 import { GetOrderUseCase } from '../../core/use-cases/get-order.use-case';
 import { createSnsClient } from '../../infrastructure/aws/sns-client';
+import { DatabaseService } from '../../infrastructure/database/database.service';
 import { InMemoryOrderEventPublisher } from '../../infrastructure/messaging/in-memory-order-event.publisher';
 import { SnsOrderEventPublisher } from '../../infrastructure/messaging/sns-order-event.publisher';
-import { InMemoryOrderRepository } from '../../infrastructure/persistence/in-memory-order.repository';
+import { DrizzleOrderRepository } from '../../infrastructure/persistence/drizzle-order.repository';
 import {
   CREATE_ORDER_USE_CASE,
   GET_ORDER_USE_CASE,
@@ -35,7 +36,12 @@ function createOrderEventPublisher(config: ConfigService<Env, true>): OrderEvent
 @Module({
   controllers: [OrdersController],
   providers: [
-    { provide: ORDER_REPOSITORY, useClass: InMemoryOrderRepository },
+    {
+      provide: ORDER_REPOSITORY,
+      inject: [DatabaseService],
+      useFactory: (database: DatabaseService): OrderRepository =>
+        new DrizzleOrderRepository(database.db),
+    },
     {
       provide: ORDER_EVENT_PUBLISHER,
       inject: [ConfigService],

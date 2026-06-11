@@ -92,7 +92,7 @@ These are the things the project is built to demonstrate well:
 - [x] `worker`: SQS/SNS consumer with retries, backoff, DLQ
 - [ ] `worker`: circuit breaker + idempotency + structured logging
 - [ ] `api`: NestJS REST + Swagger (submit orders, read status/metrics, DLQ ops)
-- [ ] Postgres schema + migrations (orders, processing log, dead letters, metrics)
+- [x] Postgres schema + migrations (orders, processing log, dead letters, metrics)
 - [ ] `web`: ops console — live throughput, queue depth, message status
 - [ ] `web`: DLQ inspection + replay, circuit-breaker state
 - [ ] `web`: real authentication (Auth.js)

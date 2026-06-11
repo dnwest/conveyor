@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from 'nestjs-pino';
 import { validateEnv } from './config/env.schema';
+import { DatabaseModule } from './infrastructure/database/database.module';
 import { OrdersModule } from './http/orders/orders.module';
 
 @Module({
@@ -13,6 +14,7 @@ import { OrdersModule } from './http/orders/orders.module';
         transport: process.env.NODE_ENV === 'production' ? undefined : { target: 'pino-pretty' },
       },
     }),
+    DatabaseModule,
     OrdersModule,
   ],
 })

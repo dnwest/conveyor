@@ -6,6 +6,8 @@ export const envSchema = z
     PORT: z.coerce.number().int().positive().default(3000),
     LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
 
+    DATABASE_URL: z.string().url(),
+
     ORDER_EVENTS_TRANSPORT: z.enum(['memory', 'sns']).default('memory'),
     ORDERS_TOPIC_ARN: z.string().optional(),
 
