@@ -90,7 +90,7 @@ These are the things the project is built to demonstrate well:
 
 - [x] Monorepo scaffold (pnpm + Turborepo, shared `core` package)
 - [x] `worker`: SQS/SNS consumer with retries, backoff, DLQ
-- [ ] `worker`: circuit breaker + idempotency + structured logging
+- [x] `worker`: circuit breaker + idempotency + structured logging
 - [ ] `api`: NestJS REST + Swagger (submit orders, read status/metrics, DLQ ops)
 - [x] Postgres schema + migrations (orders, processing log, dead letters, metrics)
 - [ ] `web`: ops console — live throughput, queue depth, message status
