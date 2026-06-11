@@ -11,6 +11,9 @@ export const envSchema = z
     ORDER_EVENTS_TRANSPORT: z.enum(['memory', 'sns']).default('memory'),
     ORDERS_TOPIC_ARN: z.string().optional(),
 
+    ORDERS_QUEUE_URL: z.string().url(),
+    ORDERS_DLQ_URL: z.string().url(),
+
     AWS_REGION: z.string().min(1).default('us-east-1'),
     AWS_ENDPOINT_URL: z.string().url().optional(),
     AWS_ACCESS_KEY_ID: z.string().min(1).default('test'),

@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from 'nestjs-pino';
 import { validateEnv } from './config/env.schema';
 import { DatabaseModule } from './infrastructure/database/database.module';
+import { ObservabilityModule } from './http/observability/observability.module';
 import { OrdersModule } from './http/orders/orders.module';
 
 @Module({
@@ -16,6 +17,7 @@ import { OrdersModule } from './http/orders/orders.module';
     }),
     DatabaseModule,
     OrdersModule,
+    ObservabilityModule,
   ],
 })
 export class AppModule {}

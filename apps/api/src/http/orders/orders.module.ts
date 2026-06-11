@@ -2,18 +2,23 @@ import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Env } from '../../config/env.schema';
 import type { OrderEventPublisher } from '../../core/ports/order-event.publisher';
+import type { OrderQueries } from '../../core/ports/order-queries';
 import type { OrderRepository } from '../../core/ports/order.repository';
 import { CreateOrderUseCase } from '../../core/use-cases/create-order.use-case';
 import { GetOrderUseCase } from '../../core/use-cases/get-order.use-case';
+import { ListOrdersUseCase } from '../../core/use-cases/list-orders.use-case';
 import { createSnsClient } from '../../infrastructure/aws/sns-client';
 import { DatabaseService } from '../../infrastructure/database/database.service';
 import { InMemoryOrderEventPublisher } from '../../infrastructure/messaging/in-memory-order-event.publisher';
 import { SnsOrderEventPublisher } from '../../infrastructure/messaging/sns-order-event.publisher';
+import { DrizzleOrderQueries } from '../../infrastructure/persistence/drizzle-order-queries';
 import { DrizzleOrderRepository } from '../../infrastructure/persistence/drizzle-order.repository';
 import {
   CREATE_ORDER_USE_CASE,
   GET_ORDER_USE_CASE,
+  LIST_ORDERS_USE_CASE,
   ORDER_EVENT_PUBLISHER,
+  ORDER_QUERIES,
   ORDER_REPOSITORY,
 } from '../../infrastructure/tokens';
 import { OrdersController } from './orders.controller';
@@ -43,6 +48,11 @@ function createOrderEventPublisher(config: ConfigService<Env, true>): OrderEvent
         new DrizzleOrderRepository(database.db),
     },
     {
+      provide: ORDER_QUERIES,
+      inject: [DatabaseService],
+      useFactory: (database: DatabaseService): OrderQueries => new DrizzleOrderQueries(database.db),
+    },
+    {
       provide: ORDER_EVENT_PUBLISHER,
       inject: [ConfigService],
       useFactory: createOrderEventPublisher,
@@ -58,6 +68,12 @@ function createOrderEventPublisher(config: ConfigService<Env, true>): OrderEvent
       inject: [ORDER_REPOSITORY],
       useFactory: (orders: OrderRepository) => new GetOrderUseCase(orders),
     },
+    {
+      provide: LIST_ORDERS_USE_CASE,
+      inject: [ORDER_QUERIES],
+      useFactory: (queries: OrderQueries) => new ListOrdersUseCase(queries),
+    },
   ],
+  exports: [ORDER_QUERIES],
 })
 export class OrdersModule {}
