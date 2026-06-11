@@ -23,7 +23,7 @@ production-grade event-driven backend **and** the observability frontend that
 operates it, sharing typed contracts. The goal is to demonstrate, end to end:
 
 - Event-Driven Architecture done with real resilience patterns (not just a queue).
-- Observability as a first-class concern — you can *see* the system working.
+- Observability as a first-class concern — you can _see_ the system working.
 - A monorepo that mirrors how a real product team would structure this.
 
 ## Architecture
@@ -76,19 +76,19 @@ These are the things the project is built to demonstrate well:
 
 ## Tech stack
 
-| Layer | Tech |
-| --- | --- |
-| API | NestJS, class-validator, Swagger/OpenAPI |
-| Worker | Node.js, AWS SDK v3 (SQS/SNS), Opossum (circuit breaker) |
-| Dashboard | Next.js (App Router), Tailwind, Auth.js, a charting lib (TBD) |
-| Data | Postgres |
-| Validation | Zod (config) + class-validator (API DTOs) |
-| Observability | Pino structured logs, k6 load tests |
-| Tooling | pnpm workspaces, Turborepo, Docker (multi-stage), GitHub Actions CI |
+| Layer         | Tech                                                                |
+| ------------- | ------------------------------------------------------------------- |
+| API           | NestJS, class-validator, Swagger/OpenAPI                            |
+| Worker        | Node.js, AWS SDK v3 (SQS/SNS), Opossum (circuit breaker)            |
+| Dashboard     | Next.js (App Router), Tailwind, Auth.js, a charting lib (TBD)       |
+| Data          | Postgres                                                            |
+| Validation    | Zod (config) + class-validator (API DTOs)                           |
+| Observability | Pino structured logs, k6 load tests                                 |
+| Tooling       | pnpm workspaces, Turborepo, Docker (multi-stage), GitHub Actions CI |
 
 ## Roadmap
 
-- [ ] Monorepo scaffold (pnpm + Turborepo, shared `core` package)
+- [x] Monorepo scaffold (pnpm + Turborepo, shared `core` package)
 - [ ] `worker`: SQS/SNS consumer with retries, backoff, DLQ
 - [ ] `worker`: circuit breaker + idempotency + structured logging
 - [ ] `api`: NestJS REST + Swagger (submit orders, read status/metrics, DLQ ops)
