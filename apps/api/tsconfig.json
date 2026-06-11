@@ -1,0 +1,9 @@
+{
+  "extends": "../../packages/config/tsconfig/nestjs.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "baseUrl": "."
+  },
+  "include": ["src", "vitest.config.ts"],
+  "exclude": ["dist", "node_modules"]
+}

@@ -1,0 +1,4 @@
+export const ORDER_REPOSITORY = Symbol('ORDER_REPOSITORY');
+export const ORDER_EVENT_PUBLISHER = Symbol('ORDER_EVENT_PUBLISHER');
+export const CREATE_ORDER_USE_CASE = Symbol('CREATE_ORDER_USE_CASE');
+export const GET_ORDER_USE_CASE = Symbol('GET_ORDER_USE_CASE');

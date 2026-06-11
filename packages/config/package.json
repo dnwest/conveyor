@@ -7,7 +7,8 @@
     "./eslint": "./eslint/base.js",
     "./prettier": "./prettier/index.mjs",
     "./tsconfig/base.json": "./tsconfig/base.json",
-    "./tsconfig/node-library.json": "./tsconfig/node-library.json"
+    "./tsconfig/node-library.json": "./tsconfig/node-library.json",
+    "./tsconfig/nestjs.json": "./tsconfig/nestjs.json"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
