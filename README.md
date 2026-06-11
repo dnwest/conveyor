@@ -30,7 +30,7 @@ operates it, sharing typed contracts. The goal is to demonstrate, end to end:
 
 ```
 ┌────────────┐   publish   ┌───────────┐   consume   ┌────────────┐
-│  api       │ ─────────▶  │  SNS/SQS  │ ─────────▶  │  worker    │
+│  api       │ ─────────▶ │  SNS/SQS  │ ─────────▶ │  worker    │
 │  (NestJS)  │             │  + DLQ    │             │  processor │
 └─────┬──────┘             └───────────┘             └─────┬──────┘
       │ REST + Swagger                                     │ metrics/events
