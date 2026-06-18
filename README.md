@@ -189,7 +189,7 @@ pnpm format        # prettier --write
 - [x] `api`: NestJS REST + Swagger (submit orders, read status, paginated list)
 - [x] `api`: observability endpoints (metrics summary, queue & DLQ depth)
 - [x] Postgres schema + migrations (orders, processing log, dead letters, metrics)
-- [ ] `web`: ops console — live throughput, queue depth, message status _(scaffold landed)_
+- [x] `web`: ops console — live throughput, queue depth, message status
 - [ ] `web`: DLQ inspection + replay, circuit-breaker state
 - [ ] `web`: real authentication (Auth.js)
 - [ ] k6 load tests + documented results in this README
