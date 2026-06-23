@@ -5,11 +5,13 @@ import type { OrderQueries } from '../../core/ports/order-queries';
 import type { QueueMetrics } from '../../core/ports/queue-metrics';
 import { GetMetricsSummaryUseCase } from '../../core/use-cases/get-metrics-summary.use-case';
 import { GetQueueDepthsUseCase } from '../../core/use-cases/get-queue-depths.use-case';
+import { GetThroughputUseCase } from '../../core/use-cases/get-throughput.use-case';
 import { createSqsClient } from '../../infrastructure/aws/sqs-client';
 import { SqsQueueMetrics } from '../../infrastructure/queues/sqs-queue-metrics';
 import {
   GET_METRICS_SUMMARY_USE_CASE,
   GET_QUEUE_DEPTHS_USE_CASE,
+  GET_THROUGHPUT_USE_CASE,
   ORDER_QUERIES,
   QUEUE_METRICS,
 } from '../../infrastructure/tokens';
@@ -40,6 +42,11 @@ function createQueueMetrics(config: ConfigService<Env, true>): QueueMetrics {
       provide: GET_METRICS_SUMMARY_USE_CASE,
       inject: [ORDER_QUERIES],
       useFactory: (queries: OrderQueries) => new GetMetricsSummaryUseCase(queries),
+    },
+    {
+      provide: GET_THROUGHPUT_USE_CASE,
+      inject: [ORDER_QUERIES],
+      useFactory: (queries: OrderQueries) => new GetThroughputUseCase(queries),
     },
     {
       provide: QUEUE_METRICS,

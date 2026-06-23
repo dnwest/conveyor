@@ -1,7 +1,17 @@
-import { ORDER_STATUSES, type MetricsSummary, type Order, type OrderStatus } from '@conveyor/core';
+import {
+  ORDER_STATUSES,
+  type MetricsSummary,
+  type Order,
+  type OrderStatus,
+  type ThroughputSeries,
+} from '@conveyor/core';
 import { orders, processingLog, type Database } from '@conveyor/db';
 import { and, desc, eq, gt, sql } from 'drizzle-orm';
-import type { ListOrdersParams, OrderQueries } from '../../core/ports/order-queries';
+import type {
+  ListOrdersParams,
+  OrderQueries,
+  ThroughputParams,
+} from '../../core/ports/order-queries';
 import { toOrderDomain } from './order.mapper';
 
 export class DrizzleOrderQueries implements OrderQueries {
@@ -49,5 +59,31 @@ export class DrizzleOrderQueries implements OrderQueries {
       .where(and(eq(processingLog.status, 'succeeded'), gt(processingLog.createdAt, oneHourAgo)));
 
     return { total, statusCounts, processedLastHour: processed?.count ?? 0 };
+  }
+
+  async throughput({ windowMinutes, bucketMinutes }: ThroughputParams): Promise<ThroughputSeries> {
+    const bucketMs = bucketMinutes * 60_000;
+    const since = new Date(Math.floor(Date.now() / bucketMs) * bucketMs - windowMinutes * 60_000);
+    const origin = sql`${since.toISOString()}::timestamptz`;
+    const stride = sql`make_interval(mins => ${bucketMinutes})`;
+
+    const rows = await this.db
+      .select({
+        bucket: sql<string>`date_bin(${stride}, ${processingLog.createdAt}, ${origin})`.as(
+          'bucket',
+        ),
+        completed: sql<number>`count(*)::int`,
+      })
+      .from(processingLog)
+      .where(and(eq(processingLog.status, 'succeeded'), gt(processingLog.createdAt, origin)))
+      .groupBy(sql`bucket`);
+
+    const counts = new Map(rows.map((row) => [new Date(row.bucket).getTime(), row.completed]));
+    const points: ThroughputSeries['points'] = [];
+    for (let t = since.getTime(); t <= Date.now(); t += bucketMs) {
+      points.push({ bucket: new Date(t).toISOString(), completed: counts.get(t) ?? 0 });
+    }
+
+    return { windowMinutes, bucketMinutes, points };
   }
 }

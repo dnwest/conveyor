@@ -33,3 +33,16 @@ export const queueDepthsSchema = z.object({
   deadLetter: queueDepthSchema,
 });
 export type QueueDepths = z.infer<typeof queueDepthsSchema>;
+
+export const throughputPointSchema = z.object({
+  bucket: z.string().datetime(),
+  completed: z.number().int().nonnegative(),
+});
+export type ThroughputPoint = z.infer<typeof throughputPointSchema>;
+
+export const throughputSeriesSchema = z.object({
+  windowMinutes: z.number().int().positive(),
+  bucketMinutes: z.number().int().positive(),
+  points: z.array(throughputPointSchema),
+});
+export type ThroughputSeries = z.infer<typeof throughputSeriesSchema>;
