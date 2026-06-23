@@ -80,14 +80,15 @@ typed REST API — so the system's health is visible, not guessed.
 
 Interactive docs are served by Swagger at **`/docs`** when the API is running.
 
-| Method | Path               | Description                                                |
-| ------ | ------------------ | ---------------------------------------------------------- |
-| `POST` | `/orders`          | Submit an order for processing                             |
-| `GET`  | `/orders`          | List orders, most recent first (paginated + status filter) |
-| `GET`  | `/orders/:id`      | Fetch a single order by id                                 |
-| `GET`  | `/metrics/summary` | Order counts by status + last-hour throughput              |
-| `GET`  | `/queues`          | Approximate depth of the main queue and its DLQ            |
-| `GET`  | `/docs`            | Swagger / OpenAPI UI                                       |
+| Method | Path                  | Description                                                |
+| ------ | --------------------- | ---------------------------------------------------------- |
+| `POST` | `/orders`             | Submit an order for processing                             |
+| `GET`  | `/orders`             | List orders, most recent first (paginated + status filter) |
+| `GET`  | `/orders/:id`         | Fetch a single order by id                                 |
+| `GET`  | `/metrics/summary`    | Order counts by status + last-hour throughput              |
+| `GET`  | `/metrics/throughput` | Completed orders bucketed over a time window               |
+| `GET`  | `/queues`             | Approximate depth of the main queue and its DLQ            |
+| `GET`  | `/docs`               | Swagger / OpenAPI UI                                       |
 
 ## Engineering focus
 
