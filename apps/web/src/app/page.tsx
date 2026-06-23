@@ -1,6 +1,7 @@
 import { MetricsCards } from '@/components/metrics-cards';
 import { OrdersTable } from '@/components/orders-table';
 import { QueuePanel } from '@/components/queue-panel';
+import { ThroughputChart } from '@/components/throughput-chart';
 
 export default function Home() {
   return (
@@ -12,6 +13,7 @@ export default function Home() {
         </p>
       </header>
       <MetricsCards />
+      <ThroughputChart />
       <QueuePanel />
       <OrdersTable />
     </main>

@@ -3,6 +3,7 @@ import {
   metricsSummarySchema,
   orderListResponseSchema,
   queueDepthsSchema,
+  throughputSeriesSchema,
   type OrderStatus,
 } from '@conveyor/core';
 import { apiFetch } from './api';
@@ -13,6 +14,15 @@ export function useMetricsSummary() {
   return useSWR('/metrics/summary', (path) => apiFetch(path, metricsSummarySchema), {
     refreshInterval: REFRESH_MS,
   });
+}
+
+export function useThroughput(windowMinutes: number, bucketMinutes: number) {
+  const params = new URLSearchParams({
+    windowMinutes: String(windowMinutes),
+    bucketMinutes: String(bucketMinutes),
+  });
+  const path = `/metrics/throughput?${params.toString()}`;
+  return useSWR(path, (p) => apiFetch(p, throughputSeriesSchema), { refreshInterval: REFRESH_MS });
 }
 
 export function useQueueDepths() {
