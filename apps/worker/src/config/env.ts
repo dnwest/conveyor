@@ -12,6 +12,7 @@ export const envSchema = z.object({
   AWS_SECRET_ACCESS_KEY: z.string().min(1).default('test'),
 
   ORDERS_QUEUE_URL: z.string().url(),
+  ORDERS_DLQ_URL: z.string().url(),
 
   MAX_PROCESSING_RETRIES: z.coerce.number().int().nonnegative().default(2),
   RETRY_BASE_DELAY_MS: z.coerce.number().int().positive().default(200),

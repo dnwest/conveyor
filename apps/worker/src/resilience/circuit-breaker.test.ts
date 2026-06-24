@@ -1,5 +1,5 @@
 import { pino } from 'pino';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { createBreaker } from './circuit-breaker';
 
 const silentLogger = pino({ level: 'silent' });
@@ -35,5 +35,25 @@ describe('createBreaker', () => {
 
     expect(breaker.opened).toBe(true);
     await expect(breaker.fire()).rejects.toThrow(/breaker is open|Breaker is open/i);
+  });
+
+  it('reports the open transition through the state callback', async () => {
+    const onState = vi.fn();
+    const breaker = createBreaker(
+      'failing',
+      async () => {
+        throw new Error('downstream down');
+      },
+      options,
+      silentLogger,
+      onState,
+    );
+
+    for (let i = 0; i < 3; i += 1) {
+      await expect(breaker.fire()).rejects.toBeDefined();
+    }
+
+    expect(breaker.opened).toBe(true);
+    expect(onState).toHaveBeenCalledWith('open');
   });
 });

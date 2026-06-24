@@ -3,7 +3,10 @@ import { createDatabase } from '@conveyor/db';
 import { createSqsClient } from './aws/sqs-client';
 import { loadEnv } from './config/env';
 import { createLogger } from './logger';
+import { DlqDrainer } from './messaging/dlq-drainer';
 import { SqsConsumer } from './messaging/sqs-consumer';
+import { DrizzleBreakerStateStore } from './infrastructure/drizzle-breaker-state-store';
+import { DrizzleDeadLetterStore } from './infrastructure/drizzle-dead-letter-store';
 import { DrizzleOrderFulfillment } from './infrastructure/drizzle-order-fulfillment';
 import { DrizzleProcessingLog } from './infrastructure/drizzle-processing-log';
 import { OrderProcessor } from './processing/order-processor';
@@ -17,6 +20,8 @@ async function main(): Promise<void> {
 
   const fulfillment = new DrizzleOrderFulfillment(db);
   const processingLog = new DrizzleProcessingLog(db);
+  const deadLetterStore = new DrizzleDeadLetterStore(db);
+  const breakerStateStore = new DrizzleBreakerStateStore(db);
   const breaker = createBreaker(
     'order-fulfillment',
     (order: Order) => fulfillment.fulfill(order),
@@ -27,6 +32,11 @@ async function main(): Promise<void> {
       volumeThreshold: env.BREAKER_VOLUME_THRESHOLD,
     },
     logger,
+    (state) => {
+      void breakerStateStore.record('order-fulfillment', state).catch((error: unknown) => {
+        logger.error({ err: error }, 'failed to record breaker state');
+      });
+    },
   );
 
   const processor = new OrderProcessor(
@@ -52,6 +62,17 @@ async function main(): Promise<void> {
     logger,
   );
 
+  const dlqDrainer = new DlqDrainer(
+    sqs,
+    {
+      queueUrl: env.ORDERS_DLQ_URL,
+      waitTimeSeconds: env.POLL_WAIT_TIME_SECONDS,
+      maxMessages: 10,
+    },
+    deadLetterStore,
+    logger,
+  );
+
   let shuttingDown = false;
   const shutdown = (signal: string): void => {
     if (shuttingDown) {
@@ -60,13 +81,14 @@ async function main(): Promise<void> {
     shuttingDown = true;
     logger.info({ signal }, 'received shutdown signal');
     consumer.stop();
+    dlqDrainer.stop();
     breaker.shutdown();
     void close();
   };
   process.on('SIGTERM', () => shutdown('SIGTERM'));
   process.on('SIGINT', () => shutdown('SIGINT'));
 
-  await consumer.start();
+  await Promise.all([consumer.start(), dlqDrainer.start()]);
 }
 
 main().catch((error: unknown) => {
