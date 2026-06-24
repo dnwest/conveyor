@@ -5,6 +5,7 @@ import { loadEnv } from './config/env';
 import { createLogger } from './logger';
 import { SqsConsumer } from './messaging/sqs-consumer';
 import { DrizzleOrderFulfillment } from './infrastructure/drizzle-order-fulfillment';
+import { DrizzleProcessingLog } from './infrastructure/drizzle-processing-log';
 import { OrderProcessor } from './processing/order-processor';
 import { createBreaker } from './resilience/circuit-breaker';
 
@@ -15,6 +16,7 @@ async function main(): Promise<void> {
   const { db, close } = createDatabase(env.DATABASE_URL);
 
   const fulfillment = new DrizzleOrderFulfillment(db);
+  const processingLog = new DrizzleProcessingLog(db);
   const breaker = createBreaker(
     'order-fulfillment',
     (order: Order) => fulfillment.fulfill(order),
@@ -34,6 +36,7 @@ async function main(): Promise<void> {
       baseDelayMs: env.RETRY_BASE_DELAY_MS,
       maxDelayMs: env.RETRY_MAX_DELAY_MS,
     },
+    processingLog,
     logger,
   );
 
