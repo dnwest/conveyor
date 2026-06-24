@@ -50,6 +50,13 @@ operates it, sharing typed contracts. The goal is to demonstrate, end to end:
 - **Observability as a first-class concern** — you can _see_ the system working.
 - **A monorepo** that mirrors how a real product team would structure this.
 
+Two of the patterns Conveyor leans on get an isolated, deep-dive treatment in their
+own focused repositories — synchronous reliability and infrastructure-as-code in
+[resilient-node-microservice](https://github.com/dnwest/resilient-node-microservice),
+and asynchronous messaging in
+[event-driven-order-processor](https://github.com/dnwest/event-driven-order-processor).
+Conveyor composes both into a single full-stack product.
+
 ## Architecture
 
 ```
