@@ -1,0 +1,1 @@
+ALTER TABLE "dead_letters" ADD COLUMN "replayed_at" timestamp with time zone;

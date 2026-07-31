@@ -1,14 +1,20 @@
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import type { Env } from '../../config/env.schema';
+import type { BreakerStateQueries } from '../../core/ports/breaker-state-queries';
 import type { OrderQueries } from '../../core/ports/order-queries';
 import type { QueueMetrics } from '../../core/ports/queue-metrics';
+import { GetBreakerStateUseCase } from '../../core/use-cases/get-breaker-state.use-case';
 import { GetMetricsSummaryUseCase } from '../../core/use-cases/get-metrics-summary.use-case';
 import { GetQueueDepthsUseCase } from '../../core/use-cases/get-queue-depths.use-case';
 import { GetThroughputUseCase } from '../../core/use-cases/get-throughput.use-case';
 import { createSqsClient } from '../../infrastructure/aws/sqs-client';
+import { DatabaseService } from '../../infrastructure/database/database.service';
+import { DrizzleBreakerStateQueries } from '../../infrastructure/persistence/drizzle-breaker-state-queries';
 import { SqsQueueMetrics } from '../../infrastructure/queues/sqs-queue-metrics';
 import {
+  BREAKER_STATE_QUERIES,
+  GET_BREAKER_STATE_USE_CASE,
   GET_METRICS_SUMMARY_USE_CASE,
   GET_QUEUE_DEPTHS_USE_CASE,
   GET_THROUGHPUT_USE_CASE,
@@ -57,6 +63,17 @@ function createQueueMetrics(config: ConfigService<Env, true>): QueueMetrics {
       provide: GET_QUEUE_DEPTHS_USE_CASE,
       inject: [QUEUE_METRICS],
       useFactory: (queueMetrics: QueueMetrics) => new GetQueueDepthsUseCase(queueMetrics),
+    },
+    {
+      provide: BREAKER_STATE_QUERIES,
+      inject: [DatabaseService],
+      useFactory: (database: DatabaseService): BreakerStateQueries =>
+        new DrizzleBreakerStateQueries(database.db),
+    },
+    {
+      provide: GET_BREAKER_STATE_USE_CASE,
+      inject: [BREAKER_STATE_QUERIES],
+      useFactory: (queries: BreakerStateQueries) => new GetBreakerStateUseCase(queries),
     },
   ],
 })

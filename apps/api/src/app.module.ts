@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from 'nestjs-pino';
 import { validateEnv } from './config/env.schema';
 import { DatabaseModule } from './infrastructure/database/database.module';
+import { DeadLettersModule } from './http/dead-letters/dead-letters.module';
 import { ObservabilityModule } from './http/observability/observability.module';
 import { OrdersModule } from './http/orders/orders.module';
 
@@ -18,6 +19,7 @@ import { OrdersModule } from './http/orders/orders.module';
     DatabaseModule,
     OrdersModule,
     ObservabilityModule,
+    DeadLettersModule,
   ],
 })
 export class AppModule {}

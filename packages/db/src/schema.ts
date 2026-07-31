@@ -39,6 +39,7 @@ export const deadLetters = pgTable('dead_letters', {
   error: text('error'),
   receiveCount: integer('receive_count').notNull().default(0),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  replayedAt: timestamp('replayed_at', { withTimezone: true }),
 });
 
 export const metrics = pgTable('metrics', {

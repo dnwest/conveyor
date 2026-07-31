@@ -10,6 +10,9 @@ export class ThroughputPointDto implements ThroughputPoint {
 
   @ApiProperty({ description: 'Orders successfully processed within the bucket' })
   completed!: number;
+
+  @ApiProperty({ description: 'Orders that exhausted their retries within the bucket' })
+  failed!: number;
 }
 
 export class ThroughputSeriesDto implements ThroughputSeries {

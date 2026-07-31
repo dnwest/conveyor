@@ -6,13 +6,16 @@ import {
   type ThroughputSeries,
 } from '@conveyor/core';
 import { orders, processingLog, type Database } from '@conveyor/db';
-import { and, desc, eq, gt, sql } from 'drizzle-orm';
+import { and, desc, eq, gt, inArray, sql } from 'drizzle-orm';
 import type {
   ListOrdersParams,
   OrderQueries,
   ThroughputParams,
 } from '../../core/ports/order-queries';
 import { toOrderDomain } from './order.mapper';
+
+const SUCCEEDED = 'succeeded';
+const FAILED = 'failed';
 
 export class DrizzleOrderQueries implements OrderQueries {
   constructor(private readonly db: Database) {}
@@ -56,7 +59,7 @@ export class DrizzleOrderQueries implements OrderQueries {
     const [processed] = await this.db
       .select({ count: sql<number>`count(*)::int` })
       .from(processingLog)
-      .where(and(eq(processingLog.status, 'succeeded'), gt(processingLog.createdAt, oneHourAgo)));
+      .where(and(eq(processingLog.status, SUCCEEDED), gt(processingLog.createdAt, oneHourAgo)));
 
     return { total, statusCounts, processedLastHour: processed?.count ?? 0 };
   }
@@ -72,16 +75,32 @@ export class DrizzleOrderQueries implements OrderQueries {
         bucket: sql<string>`date_bin(${stride}, ${processingLog.createdAt}, ${origin})`.as(
           'bucket',
         ),
-        completed: sql<number>`count(*)::int`,
+        status: processingLog.status,
+        count: sql<number>`count(*)::int`,
       })
       .from(processingLog)
-      .where(and(eq(processingLog.status, 'succeeded'), gt(processingLog.createdAt, origin)))
-      .groupBy(sql`bucket`);
+      .where(
+        and(
+          inArray(processingLog.status, [SUCCEEDED, FAILED]),
+          gt(processingLog.createdAt, origin),
+        ),
+      )
+      .groupBy(sql`bucket`, processingLog.status);
 
-    const counts = new Map(rows.map((row) => [new Date(row.bucket).getTime(), row.completed]));
+    const completedCounts = new Map<number, number>();
+    const failedCounts = new Map<number, number>();
+    for (const row of rows) {
+      const counts = row.status === SUCCEEDED ? completedCounts : failedCounts;
+      counts.set(new Date(row.bucket).getTime(), row.count);
+    }
+
     const points: ThroughputSeries['points'] = [];
     for (let t = since.getTime(); t <= Date.now(); t += bucketMs) {
-      points.push({ bucket: new Date(t).toISOString(), completed: counts.get(t) ?? 0 });
+      points.push({
+        bucket: new Date(t).toISOString(),
+        completed: completedCounts.get(t) ?? 0,
+        failed: failedCounts.get(t) ?? 0,
+      });
     }
 
     return { windowMinutes, bucketMinutes, points };
