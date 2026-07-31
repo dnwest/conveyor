@@ -87,15 +87,23 @@ typed REST API — so the system's health is visible, not guessed.
 
 Interactive docs are served by Swagger at **`/docs`** when the API is running.
 
-| Method | Path                  | Description                                                |
-| ------ | --------------------- | ---------------------------------------------------------- |
-| `POST` | `/orders`             | Submit an order for processing                             |
-| `GET`  | `/orders`             | List orders, most recent first (paginated + status filter) |
-| `GET`  | `/orders/:id`         | Fetch a single order by id                                 |
-| `GET`  | `/metrics/summary`    | Order counts by status + last-hour throughput              |
-| `GET`  | `/metrics/throughput` | Completed orders bucketed over a time window               |
-| `GET`  | `/queues`             | Approximate depth of the main queue and its DLQ            |
-| `GET`  | `/docs`               | Swagger / OpenAPI UI                                       |
+| Method | Path                       | Description                                                |
+| ------ | -------------------------- | ---------------------------------------------------------- |
+| `POST` | `/orders`                  | Submit an order for processing                             |
+| `GET`  | `/orders`                  | List orders, most recent first (paginated + status filter) |
+| `GET`  | `/orders/:id`              | Fetch a single order by id                                 |
+| `GET`  | `/metrics/summary`         | Order counts by status + last-hour throughput              |
+| `GET`  | `/metrics/throughput`      | Completed and failed orders bucketed over a time window    |
+| `GET`  | `/metrics/breaker`         | Current circuit-breaker state, as recorded by the worker   |
+| `GET`  | `/queues`                  | Approximate depth of the main queue and its DLQ            |
+| `GET`  | `/dead-letters`            | Inspect dead letters, most recent first (paginated)        |
+| `POST` | `/dead-letters/:id/replay` | Send one dead letter back to the orders queue              |
+| `GET`  | `/docs`                    | Swagger / OpenAPI UI                                       |
+
+Replay is a redrive of a single message rather than a new domain event: the
+stored payload goes straight back to the orders queue. It is idempotent — a
+repeated or concurrent replay gets `409`, and a payload that no longer parses
+gets `422` instead of being put back on the queue.
 
 ## Engineering focus
 
@@ -198,6 +206,8 @@ pnpm format        # prettier --write
 - [x] `api`: observability endpoints (metrics summary, queue & DLQ depth)
 - [x] Postgres schema + migrations (orders, processing log, dead letters, metrics)
 - [x] `web`: ops console — live throughput, queue depth, message status
+- [x] `worker`: persist failed attempts, dead letters and breaker transitions
+- [x] `api`: dead-letter inspection + replay, breaker state, failure series
 - [ ] `web`: DLQ inspection + replay, circuit-breaker state
 - [ ] `web`: real authentication (Auth.js)
 - [ ] k6 load tests + documented results in this README
