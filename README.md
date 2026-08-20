@@ -31,6 +31,7 @@ Next.js operations console.
 - [Why this exists](#why-this-exists)
 - [Architecture](#architecture)
 - [API surface](#api-surface)
+- [Access control](#access-control)
 - [Engineering focus](#engineering-focus)
 - [Design decisions](#design-decisions)
 - [Tech stack](#tech-stack)
@@ -97,13 +98,39 @@ Interactive docs are served by Swagger at **`/docs`** when the API is running.
 | `GET`  | `/metrics/breaker`         | Current circuit-breaker state, as recorded by the worker   |
 | `GET`  | `/queues`                  | Approximate depth of the main queue and its DLQ            |
 | `GET`  | `/dead-letters`            | Inspect dead letters, most recent first (paginated)        |
-| `POST` | `/dead-letters/:id/replay` | Send one dead letter back to the orders queue              |
+| `POST` | `/dead-letters/:id/replay` | Send one dead letter back to the orders queue (authorised) |
 | `GET`  | `/docs`                    | Swagger / OpenAPI UI                                       |
 
 Replay is a redrive of a single message rather than a new domain event: the
 stored payload goes straight back to the orders queue. It is idempotent — a
 repeated or concurrent replay gets `409`, and a payload that no longer parses
-gets `422` instead of being put back on the queue.
+gets `422` instead of being put back on the queue. It is also the one endpoint
+that is not open: it requires a service token, which only the console's own
+server holds (see [Access control](#access-control)).
+
+## Access control
+
+The console requires a session on every route. There are two ways in:
+
+| Sign-in                              | Role       | May replay dead letters |
+| ------------------------------------ | ---------- | ----------------------- |
+| GitHub OAuth, email on the allowlist | `operator` | yes                     |
+| Demo account (email + password)      | `viewer`   | no                      |
+
+The demo account exists so the hosted deploy can be explored without handing out
+the ability to move messages around. The GitHub provider registers itself only
+when its credentials are configured, so a checkout with no OAuth app still boots
+and offers demo sign-in alone.
+
+Authorisation is enforced on the server, not just in the UI. The browser never
+holds the service token: a replay goes to the console's own route handler, which
+checks the session and the role before forwarding it to the API, and the API
+rejects the call outright without that token. Read endpoints stay open on
+purpose — the hosted Swagger is meant to be explored.
+
+Passwords are verified with `scrypt` from `node:crypto`; the demo hash is
+generated with `pnpm --filter @conveyor/web hash-password` and lives in the
+environment, never in the repository.
 
 ## Engineering focus
 
@@ -118,8 +145,9 @@ These are the things the project is built to demonstrate well:
   p95, error rate) in this README — numbers, not adjectives.
 - **Type-safe boundaries:** request/response and domain contracts shared via
   `packages/core` as Zod schemas, so the API and the dashboard can't drift.
-- **Real auth on the console:** the dashboard is gated by real authentication —
-  no mock data, no fake login.
+- **Real auth on the console:** the dashboard is gated by Auth.js with two
+  roles — operators may replay dead letters, viewers may only read. No mock
+  data, no fake login.
 
 ## Design decisions
 
@@ -139,6 +167,10 @@ A few choices worth calling out, with the reasoning behind them:
   deliberate future upgrade, not premature complexity.
 - **LocalStack in development.** SQS/SNS run locally via LocalStack to mirror AWS
   without cost, keeping dev and prod on the same APIs.
+- **Public reads, authorised writes.** Keeping the read endpoints open is what
+  makes the hosted Swagger worth publishing; the write path is the one that can
+  change the system, so it is the one that is locked down. The console acts as
+  the trusted caller, which keeps the shared secret out of the browser.
 
 ## Tech stack
 
@@ -146,7 +178,7 @@ A few choices worth calling out, with the reasoning behind them:
 | ------------- | ------------------------------------------------------------------- |
 | API           | NestJS, class-validator, Swagger/OpenAPI                            |
 | Worker        | Node.js, AWS SDK v3 (SQS/SNS), Opossum (circuit breaker)            |
-| Dashboard     | Next.js (App Router), Tailwind, SWR (polling), Recharts, Auth.js    |
+| Dashboard     | Next.js (App Router), Tailwind, SWR (polling), Recharts, Auth.js v5 |
 | Data          | Postgres + Drizzle ORM                                              |
 | Validation    | Zod (contracts & config) + class-validator (API DTOs)               |
 | Observability | Pino structured logs, k6 load tests                                 |
@@ -209,7 +241,7 @@ pnpm format        # prettier --write
 - [x] `worker`: persist failed attempts, dead letters and breaker transitions
 - [x] `api`: dead-letter inspection + replay, breaker state, failure series
 - [x] `web`: DLQ inspection + replay, circuit-breaker state
-- [ ] `web`: real authentication (Auth.js)
+- [x] `web`: real authentication (Auth.js) — GitHub OAuth + read-only demo
 - [ ] k6 load tests + documented results in this README
 - [ ] CI (lint, test, build) + Docker images
 - [ ] Deploy (Railway) with public Swagger + live dashboard demo
