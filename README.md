@@ -26,6 +26,15 @@ Next.js operations console.
 
 ---
 
+<div align="center">
+  <img src="docs/console-overview.png" alt="Conveyor ops console showing live throughput, order counts and queue health" width="880">
+  <p><em>The console during a load run — every number here comes from the k6 scenarios
+  documented in <a href="#load-testing">Load testing</a>. The
+  <a href="docs/ops-console.png">full console</a> adds queue depth, dead letters and orders.</em></p>
+</div>
+
+---
+
 ## Table of contents
 
 - [Why this exists](#why-this-exists)
@@ -149,6 +158,14 @@ These are the things the project is built to demonstrate well:
 - **Real auth on the console:** the dashboard is gated by Auth.js with two
   roles — operators may replay dead letters, viewers may only read. No mock
   data, no fake login.
+
+![Dead letters and circuit-breaker state in the ops console](docs/dlq-and-breaker.png)
+
+Dead letters keep the receive count that sent them there and whether they have been
+replayed; the breaker panel reports the last transition the worker recorded. Replay is
+disabled in this shot because the session is a viewer — and the console checks that role
+on the server before it will forward the call, so the buttons are the courtesy, not the
+control.
 
 ## Load testing
 
