@@ -16,7 +16,10 @@
     "infra:up": "docker compose up -d",
     "infra:down": "docker compose down",
     "db:generate": "pnpm --filter @conveyor/db db:generate",
-    "db:migrate": "pnpm --filter @conveyor/db db:migrate"
+    "db:migrate": "pnpm --filter @conveyor/db db:migrate",
+    "load:ingest": "./scripts/k6.sh ingest.js",
+    "load:read": "./scripts/k6.sh read.js",
+    "load:pipeline": "./scripts/k6.sh pipeline.js"
   },
   "devDependencies": {
     "@conveyor/config": "workspace:*",
