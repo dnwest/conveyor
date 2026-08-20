@@ -208,7 +208,7 @@ pnpm format        # prettier --write
 - [x] `web`: ops console — live throughput, queue depth, message status
 - [x] `worker`: persist failed attempts, dead letters and breaker transitions
 - [x] `api`: dead-letter inspection + replay, breaker state, failure series
-- [ ] `web`: DLQ inspection + replay, circuit-breaker state
+- [x] `web`: DLQ inspection + replay, circuit-breaker state
 - [ ] `web`: real authentication (Auth.js)
 - [ ] k6 load tests + documented results in this README
 - [ ] CI (lint, test, build) + Docker images
