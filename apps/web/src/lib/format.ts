@@ -1,5 +1,13 @@
 const relative = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
 
+const compact = new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 });
+
+// Axis labels sit in a fixed gutter, so they have to stay short whether the bucket
+// holds three orders or thirty thousand.
+export function compactCount(value: number): string {
+  return compact.format(value);
+}
+
 const UNITS: ReadonlyArray<[Intl.RelativeTimeFormatUnit, number]> = [
   ['second', 60],
   ['minute', 60],

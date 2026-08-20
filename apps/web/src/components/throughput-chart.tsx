@@ -9,6 +9,7 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import { compactCount } from '@/lib/format';
 import { useThroughput } from '@/lib/hooks';
 import { ErrorState } from './ui';
 
@@ -54,7 +55,7 @@ export function ThroughputChart() {
           <div className="h-56 animate-pulse rounded-md bg-neutral-900/60" />
         ) : (
           <ResponsiveContainer width="100%" height={224}>
-            <AreaChart data={points} margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>
+            <AreaChart data={points} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
               <defs>
                 {SERIES.map((series) => (
                   <linearGradient
@@ -85,7 +86,8 @@ export function ThroughputChart() {
                 tickLine={false}
                 axisLine={false}
                 allowDecimals={false}
-                width={32}
+                tickFormatter={compactCount}
+                width={44}
               />
               <Tooltip
                 cursor={{ stroke: '#404040' }}
