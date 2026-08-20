@@ -33,6 +33,7 @@ Next.js operations console.
 - [API surface](#api-surface)
 - [Access control](#access-control)
 - [Engineering focus](#engineering-focus)
+- [Load testing](#load-testing)
 - [Design decisions](#design-decisions)
 - [Tech stack](#tech-stack)
 - [Project layout](#project-layout)
@@ -149,6 +150,84 @@ These are the things the project is built to demonstrate well:
   roles — operators may replay dead letters, viewers may only read. No mock
   data, no fake login.
 
+## Load testing
+
+Three k6 scenarios live in [`load/`](load), each answering a different question.
+Run them against the local stack:
+
+```bash
+pnpm load:ingest     # write path — how many orders/s the API accepts
+pnpm load:read       # read path — the console's dashboard refresh
+pnpm load:pipeline   # end to end — submit until the worker marks it completed
+```
+
+`scripts/k6.sh` uses a locally installed k6 when there is one and the official
+image otherwise, so Docker — already a prerequisite — is enough. Every scenario
+carries thresholds and exits non-zero when one is crossed: these are assertions,
+not just graphs. Knobs are k6 env vars, e.g. `pnpm load:ingest -- -e RATE=300`.
+
+### Results
+
+Measured on an Intel i3-10100T (4c/8t, 15 GB), Node 25, Postgres 17 and
+LocalStack in Docker, with the API and worker running production builds.
+LocalStack stands in for SQS/SNS, so queue latency is friendlier than AWS would
+be: these numbers characterise this machine, they are not a capacity plan.
+
+**Write path** — `ingest.js`, a 15s ramp to the target rate, 45s holding it, 5s
+down, with the queue drained before each run. The whole-run average lands near
+85% of the target rate by construction, so tracking that figure is what "kept
+up" looks like.
+
+| Target rate | Achieved | p95    | Errors | Within the 250 ms budget |
+| ----------- | -------- | ------ | ------ | ------------------------ |
+| 120 /s      | 103 /s   | 9.9 ms | 0%     | yes                      |
+| 200 /s      | 170 /s   | 104 ms | 0%     | yes                      |
+| 250 /s      | 212 /s   | 135 ms | 0%     | yes                      |
+| 300 /s      | 254 /s   | 181 ms | 0%     | yes                      |
+| 400 /s      | 304 /s   | 969 ms | 0%     | no                       |
+
+Up to 300/s the achieved rate tracks the plan exactly. At 400/s it stops: the
+API took 304/s where the ramp asked for ~338/s and p95 crossed a second — while
+still not failing a single request. The generator hit its own VU ceiling in that
+run too, so ~300/s is a floor on the real limit rather than a measured wall.
+
+**Read path** — `read.js`, 20 dashboard refreshes per second (120 req/s), one
+refresh being the six requests the console fires every 2.5s, against a table of
+~148k orders.
+
+| Endpoint              | p95     |
+| --------------------- | ------- |
+| `/metrics/breaker`    | 10.8 ms |
+| `/dead-letters`       | 12.9 ms |
+| `/queues`             | 14.2 ms |
+| `/orders`             | 48.6 ms |
+| `/metrics/summary`    | 57.0 ms |
+| `/metrics/throughput` | 61.3 ms |
+
+Nothing failed. The spread is the interesting part: the routes that aggregate in
+Postgres cost roughly five times the ones that read a single row or ask SQS for
+a depth — which is where an index or a cached rollup would go first.
+
+**End to end** — `pipeline.js`, 20 orders/s, each order polled until the worker
+marks it `completed`, so the number spans API, SNS, SQS, worker and Postgres.
+
+| Metric    | Value              |
+| --------- | ------------------ |
+| median    | 61 ms              |
+| p95       | 76 ms              |
+| max       | 137 ms             |
+| completed | 100% (1200 / 1200) |
+
+**Burst absorption.** The saturation run pushed 19,792 orders through in 65s,
+far past what one worker can process. Nothing was dropped: the queue held the
+backlog and a single worker drained 18,595 of them in 111s (~167 orders/s),
+which is exactly why the queue is there. Across the whole session 148,038 orders
+went through the pipeline with zero failures and zero dead letters.
+
+The worker handles messages one at a time, so ~170 orders/s is the ceiling of a
+single instance. The lever is running more workers, not a bigger one — the
+consumer is already stateless and idempotent, which is what makes that safe.
+
 ## Design decisions
 
 A few choices worth calling out, with the reasoning behind them:
@@ -242,7 +321,7 @@ pnpm format        # prettier --write
 - [x] `api`: dead-letter inspection + replay, breaker state, failure series
 - [x] `web`: DLQ inspection + replay, circuit-breaker state
 - [x] `web`: real authentication (Auth.js) — GitHub OAuth + read-only demo
-- [ ] k6 load tests + documented results in this README
+- [x] k6 load tests + documented results in this README
 - [ ] CI (lint, test, build) + Docker images
 - [ ] Deploy (Railway) with public Swagger + live dashboard demo
 
