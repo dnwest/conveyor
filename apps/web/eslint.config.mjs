@@ -11,4 +11,8 @@ export default [
       ...next.configs['core-web-vitals'].rules,
     },
   },
+  {
+    files: ['scripts/**'],
+    languageOptions: { globals: { process: 'readonly' } },
+  },
 ];

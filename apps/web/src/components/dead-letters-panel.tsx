@@ -42,7 +42,7 @@ function Chevron({ expanded }: { expanded: boolean }) {
   );
 }
 
-export function DeadLettersPanel() {
+export function DeadLettersPanel({ canReplay }: { canReplay: boolean }) {
   const [offset, setOffset] = useState(0);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [replayingId, setReplayingId] = useState<string | null>(null);
@@ -125,8 +125,9 @@ export function DeadLettersPanel() {
                     <td className="px-4 py-2 text-right">
                       <button
                         type="button"
-                        disabled={Boolean(deadLetter.replayedAt) || replaying}
+                        disabled={!canReplay || Boolean(deadLetter.replayedAt) || replaying}
                         onClick={() => void replay(deadLetter.id)}
+                        title={canReplay ? undefined : 'Replaying requires an operator account'}
                         className="rounded-md border border-neutral-700 px-3 py-1 text-xs hover:border-neutral-500 disabled:opacity-40 disabled:hover:border-neutral-700"
                       >
                         {replaying ? 'Replaying…' : 'Replay'}
@@ -183,7 +184,11 @@ export function DeadLettersPanel() {
       </div>
 
       <div className="flex items-center justify-between text-sm text-neutral-400">
-        <span>Replaying sends the stored payload back to the orders queue.</span>
+        <span>
+          {canReplay
+            ? 'Replaying sends the stored payload back to the orders queue.'
+            : 'Replaying a dead letter requires an operator account.'}
+        </span>
         <div className="flex gap-2">
           <button
             type="button"
