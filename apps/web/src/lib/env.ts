@@ -7,6 +7,9 @@ const serverEnvSchema = z.object({
   AUTH_OPERATOR_EMAILS: z.string().default(''),
   DEMO_EMAIL: z.string().email(),
   DEMO_PASSWORD_HASH: z.string().min(1),
+
+  API_URL: z.string().url().default('http://localhost:3000'),
+  API_SERVICE_TOKEN: z.string().min(32),
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;

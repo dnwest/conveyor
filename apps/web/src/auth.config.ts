@@ -1,4 +1,5 @@
 import type { NextAuthConfig } from 'next-auth';
+import { NextResponse } from 'next/server';
 
 export const ROLES = ['operator', 'viewer'] as const;
 export type Role = (typeof ROLES)[number];
@@ -13,7 +14,14 @@ export const authConfig = {
   providers: [],
   callbacks: {
     authorized({ auth, request }) {
-      return request.nextUrl.pathname.startsWith(LOGIN_PATH) || Boolean(auth?.user);
+      const { pathname } = request.nextUrl;
+      if (pathname.startsWith(LOGIN_PATH) || auth?.user) return true;
+
+      // Route handlers are reached by fetch, which would follow a redirect and
+      // parse the login page as if it were the answer.
+      return pathname.startsWith('/api/')
+        ? NextResponse.json({ message: 'Sign in to continue' }, { status: 401 })
+        : false;
     },
     jwt({ token, user }) {
       if (user) token.role = user.role;

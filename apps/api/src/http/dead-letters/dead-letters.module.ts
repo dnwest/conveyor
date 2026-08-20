@@ -18,6 +18,7 @@ import {
   LIST_DEAD_LETTERS_USE_CASE,
   REPLAY_DEAD_LETTER_USE_CASE,
 } from '../../infrastructure/tokens';
+import { ServiceTokenGuard } from '../service-token.guard';
 import { DeadLettersController } from './dead-letters.controller';
 
 function createDeadLetterReplayer(config: ConfigService<Env, true>): DeadLetterReplayer {
@@ -34,6 +35,7 @@ function createDeadLetterReplayer(config: ConfigService<Env, true>): DeadLetterR
 @Module({
   controllers: [DeadLettersController],
   providers: [
+    ServiceTokenGuard,
     {
       provide: DEAD_LETTER_QUERIES,
       inject: [DatabaseService],

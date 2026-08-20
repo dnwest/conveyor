@@ -8,13 +8,16 @@ import {
   ParseUUIDPipe,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiConflictResponse,
+  ApiHeader,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiTags,
+  ApiUnauthorizedResponse,
   ApiUnprocessableEntityResponse,
 } from '@nestjs/swagger';
 import type { ListDeadLettersUseCase } from '../../core/use-cases/list-dead-letters.use-case';
@@ -23,6 +26,7 @@ import {
   LIST_DEAD_LETTERS_USE_CASE,
   REPLAY_DEAD_LETTER_USE_CASE,
 } from '../../infrastructure/tokens';
+import { SERVICE_TOKEN_HEADER, ServiceTokenGuard } from '../service-token.guard';
 import { DeadLetterDto } from './dto/dead-letter.dto';
 import { DeadLetterListDto } from './dto/dead-letter-list.dto';
 import { ListDeadLettersQueryDto } from './dto/list-dead-letters.query';
@@ -43,9 +47,12 @@ export class DeadLettersController {
   }
 
   @Post(':id/replay')
+  @UseGuards(ServiceTokenGuard)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Send a dead letter back to the orders queue' })
+  @ApiHeader({ name: SERVICE_TOKEN_HEADER, description: 'Shared service token', required: true })
   @ApiOkResponse({ type: DeadLetterDto })
+  @ApiUnauthorizedResponse({ description: 'Missing or invalid service token' })
   @ApiNotFoundResponse({ description: 'No dead letter with that id' })
   @ApiConflictResponse({ description: 'Dead letter was already replayed' })
   @ApiUnprocessableEntityResponse({ description: 'Payload is not a replayable order event' })

@@ -12,16 +12,30 @@ export class ApiError extends Error {
   }
 }
 
+type RequestOptions = {
+  // Same-origin paths are served by the console itself rather than the API.
+  sameOrigin?: boolean;
+};
+
 export function apiFetch<T>(path: string, schema: ZodType<T>): Promise<T> {
-  return request(path, schema, 'GET');
+  return request(path, schema, 'GET', {});
 }
 
-export function apiPost<T>(path: string, schema: ZodType<T>): Promise<T> {
-  return request(path, schema, 'POST');
+export function apiPost<T>(
+  path: string,
+  schema: ZodType<T>,
+  options: RequestOptions = {},
+): Promise<T> {
+  return request(path, schema, 'POST', options);
 }
 
-async function request<T>(path: string, schema: ZodType<T>, method: string): Promise<T> {
-  const response = await fetch(`${baseUrl}${path}`, { method });
+async function request<T>(
+  path: string,
+  schema: ZodType<T>,
+  method: string,
+  { sameOrigin = false }: RequestOptions,
+): Promise<T> {
+  const response = await fetch(sameOrigin ? path : `${baseUrl}${path}`, { method });
   if (!response.ok) {
     throw new ApiError(response.status, await failureMessage(response, path));
   }

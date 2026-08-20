@@ -10,6 +10,8 @@ export const envSchema = z
 
     DATABASE_URL: z.string().url(),
 
+    SERVICE_TOKEN: z.string().min(32),
+
     ORDER_EVENTS_TRANSPORT: z.enum(['memory', 'sns']).default('memory'),
     ORDERS_TOPIC_ARN: z.string().optional(),
 

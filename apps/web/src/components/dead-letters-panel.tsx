@@ -10,6 +10,8 @@ import { ErrorState } from './ui';
 const PAGE_SIZE = 10;
 
 const REPLAY_FAILURES: Record<number, string> = {
+  401: 'Your session expired — sign in again.',
+  403: 'Replaying requires an operator account.',
   404: 'This dead letter no longer exists.',
   409: 'Already replayed — the list was out of date.',
   422: 'Payload is not a replayable order event.',
