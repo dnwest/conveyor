@@ -1,3 +1,5 @@
+import { BreakerPanel } from '@/components/breaker-panel';
+import { DeadLettersPanel } from '@/components/dead-letters-panel';
 import { MetricsCards } from '@/components/metrics-cards';
 import { OrdersTable } from '@/components/orders-table';
 import { QueuePanel } from '@/components/queue-panel';
@@ -15,6 +17,8 @@ export default function Home() {
       <MetricsCards />
       <ThroughputChart />
       <QueuePanel />
+      <BreakerPanel />
+      <DeadLettersPanel />
       <OrdersTable />
     </main>
   );
