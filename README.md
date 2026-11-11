@@ -48,6 +48,7 @@ Next.js operations console.
 - [Project layout](#project-layout)
 - [Getting started](#getting-started)
 - [Roadmap](#roadmap)
+- [How this was built](#how-this-was-built)
 - [License](#license)
 
 ## Why this exists
@@ -341,6 +342,16 @@ pnpm format        # prettier --write
 - [x] k6 load tests + documented results in this README
 - [ ] CI (lint, test, build) + Docker images
 - [ ] Deploy (Railway) with public Swagger + live dashboard demo
+
+## How this was built
+
+Built with an AI-assisted workflow (Claude Code). Architecture, design decisions
+and code review are mine. Every change passed the same gate before it was
+committed — format, lint, typecheck, build and tests, plus an end-to-end run
+against the real stack — which caught runtime bugs the type system couldn't,
+like the worker never loading its `.env` and Auth.js rejecting every sign-in
+outside dev. The k6 load tests were written and run by Claude Code in an
+automated loop.
 
 ## License
 
