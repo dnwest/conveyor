@@ -2,10 +2,11 @@
 
 # Conveyor
 
-**Event-driven order processing platform** — a resilient SQS/SNS worker with Dead
+**Event-driven order processing platform**: a resilient SQS/SNS worker with Dead
 Letter Queues and circuit breaking, fronted by a NestJS API and a real-time
 Next.js operations console.
 
+[![CI](https://github.com/dnwest/conveyor/actions/workflows/ci.yml/badge.svg)](https://github.com/dnwest/conveyor/actions/workflows/ci.yml)
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![NestJS](https://img.shields.io/badge/NestJS-E0234E?logo=nestjs&logoColor=white)](https://nestjs.com/)
 [![Next.js](https://img.shields.io/badge/Next.js-000000?logo=nextdotjs&logoColor=white)](https://nextjs.org/)
@@ -18,17 +19,17 @@ Next.js operations console.
 
 > Think of it as the conveyor belt of an order pipeline: messages move down the
 > line, get processed, and the ones that fail drop into a DLQ you can inspect and
-> replay — all observable from a live ops dashboard.
+> replay, all observable from a live ops dashboard.
 
 > **Status:** 🚧 In active development. This README doubles as the design doc and
-> roadmap; sections are checked off as they land. No fake data, no mock screens —
+> roadmap; sections are checked off as they land. No fake data, no mock screens:
 > features show up here only once they actually work.
 
 ---
 
 <div align="center">
   <img src="docs/console-overview.png" alt="Conveyor ops console showing live throughput, order counts and queue health" width="880">
-  <p><em>The console during a load run — every number here comes from the k6 scenarios
+  <p><em>The console during a load run. Every number here comes from the k6 scenarios
   documented in <a href="#load-testing">Load testing</a>. The
   <a href="docs/ops-console.png">full console</a> adds queue depth, dead letters and orders.</em></p>
 </div>
@@ -58,12 +59,12 @@ fake data. Conveyor is deliberately **one cohesive full-stack product**: a
 production-grade event-driven backend **and** the observability frontend that
 operates it, sharing typed contracts. The goal is to demonstrate, end to end:
 
-- **Event-Driven Architecture** done with real resilience patterns — not just a queue.
-- **Observability as a first-class concern** — you can _see_ the system working.
+- **Event-Driven Architecture** done with real resilience patterns, not just a queue.
+- **Observability as a first-class concern**: you can _see_ the system working.
 - **A monorepo** that mirrors how a real product team would structure this.
 
 Two of the patterns Conveyor leans on get an isolated, deep-dive treatment in their
-own focused repositories — synchronous reliability and infrastructure-as-code in
+own focused repositories: synchronous reliability and infrastructure-as-code in
 [resilient-node-microservice](https://github.com/dnwest/resilient-node-microservice),
 and asynchronous messaging in
 [event-driven-order-processor](https://github.com/dnwest/event-driven-order-processor).
@@ -93,7 +94,7 @@ Conveyor composes both into a single full-stack product.
 The worker consumes it with retries and exponential backoff; a circuit breaker
 guards the downstream call, and poison messages land in a Dead Letter Queue.
 Every stage writes to Postgres, and the web console reads it all back over the
-typed REST API — so the system's health is visible, not guessed.
+typed REST API, so the system's health is visible, not guessed.
 
 ## API surface
 
@@ -113,7 +114,7 @@ Interactive docs are served by Swagger at **`/docs`** when the API is running.
 | `GET`  | `/docs`                    | Swagger / OpenAPI UI                                       |
 
 Replay is a redrive of a single message rather than a new domain event: the
-stored payload goes straight back to the orders queue. It is idempotent — a
+stored payload goes straight back to the orders queue. It is idempotent: a
 repeated or concurrent replay gets `409`, and a payload that no longer parses
 gets `422` instead of being put back on the queue. It is also the one endpoint
 that is not open: it requires a service token, which only the console's own
@@ -137,7 +138,7 @@ Authorisation is enforced on the server, not just in the UI. The browser never
 holds the service token: a replay goes to the console's own route handler, which
 checks the session and the role before forwarding it to the API, and the API
 rejects the call outright without that token. Read endpoints stay open on
-purpose — the hosted Swagger is meant to be explored.
+purpose, since the hosted Swagger is meant to be explored.
 
 Passwords are verified with `scrypt` from `node:crypto`; the demo hash is
 generated with `pnpm --filter @conveyor/web hash-password` and lives in the
@@ -153,18 +154,18 @@ These are the things the project is built to demonstrate well:
 - **Observability:** structured logging (Pino), per-stage metrics, and a live
   dashboard so the system's health is visible, not guessed.
 - **Correctness under load:** k6 load tests with documented results (throughput,
-  p95, error rate) in this README — numbers, not adjectives.
+  p95, error rate) in this README: numbers, not adjectives.
 - **Type-safe boundaries:** request/response and domain contracts shared via
   `packages/core` as Zod schemas, so the API and the dashboard can't drift.
 - **Real auth on the console:** the dashboard is gated by Auth.js with two
-  roles — operators may replay dead letters, viewers may only read. No mock
+  roles: operators may replay dead letters, viewers may only read. No mock
   data, no fake login.
 
 ![Dead letters and circuit-breaker state in the ops console](docs/dlq-and-breaker.png)
 
 Dead letters keep the receive count that sent them there and whether they have been
 replayed; the breaker panel reports the last transition the worker recorded. Replay is
-disabled in this shot because the session is a viewer — and the console checks that role
+disabled in this shot because the session is a viewer, and the console checks that role
 on the server before it will forward the call, so the buttons are the courtesy, not the
 control.
 
@@ -174,13 +175,13 @@ Three k6 scenarios live in [`load/`](load), each answering a different question.
 Run them against the local stack:
 
 ```bash
-pnpm load:ingest     # write path — how many orders/s the API accepts
-pnpm load:read       # read path — the console's dashboard refresh
-pnpm load:pipeline   # end to end — submit until the worker marks it completed
+pnpm load:ingest     # write path: how many orders/s the API accepts
+pnpm load:read       # read path: the console's dashboard refresh
+pnpm load:pipeline   # end to end: submit until the worker marks it completed
 ```
 
 `scripts/k6.sh` uses a locally installed k6 when there is one and the official
-image otherwise, so Docker — already a prerequisite — is enough. Every scenario
+image otherwise, so Docker, already a prerequisite, is enough. Every scenario
 carries thresholds and exits non-zero when one is crossed: these are assertions,
 not just graphs. Knobs are k6 env vars, e.g. `pnpm load:ingest -- -e RATE=300`.
 
@@ -191,7 +192,7 @@ LocalStack in Docker, with the API and worker running production builds.
 LocalStack stands in for SQS/SNS, so queue latency is friendlier than AWS would
 be: these numbers characterise this machine, they are not a capacity plan.
 
-**Write path** — `ingest.js`, a 15s ramp to the target rate, 45s holding it, 5s
+**Write path.** `ingest.js`, a 15s ramp to the target rate, 45s holding it, 5s
 down, with the queue drained before each run. The whole-run average lands near
 85% of the target rate by construction, so tracking that figure is what "kept
 up" looks like.
@@ -205,11 +206,11 @@ up" looks like.
 | 400 /s      | 304 /s   | 969 ms | 0%     | no                       |
 
 Up to 300/s the achieved rate tracks the plan exactly. At 400/s it stops: the
-API took 304/s where the ramp asked for ~338/s and p95 crossed a second — while
+API took 304/s where the ramp asked for ~338/s and p95 crossed a second, while
 still not failing a single request. The generator hit its own VU ceiling in that
 run too, so ~300/s is a floor on the real limit rather than a measured wall.
 
-**Read path** — `read.js`, 20 dashboard refreshes per second (120 req/s), one
+**Read path.** `read.js`, 20 dashboard refreshes per second (120 req/s), one
 refresh being the six requests the console fires every 2.5s, against a table of
 ~148k orders.
 
@@ -224,9 +225,9 @@ refresh being the six requests the console fires every 2.5s, against a table of
 
 Nothing failed. The spread is the interesting part: the routes that aggregate in
 Postgres cost roughly five times the ones that read a single row or ask SQS for
-a depth — which is where an index or a cached rollup would go first.
+a depth, which is where an index or a cached rollup would go first.
 
-**End to end** — `pipeline.js`, 20 orders/s, each order polled until the worker
+**End to end.** `pipeline.js`, 20 orders/s, each order polled until the worker
 marks it `completed`, so the number spans API, SNS, SQS, worker and Postgres.
 
 | Metric    | Value              |
@@ -243,7 +244,7 @@ which is exactly why the queue is there. Across the whole session 148,038 orders
 went through the pipeline with zero failures and zero dead letters.
 
 The worker handles messages one at a time, so ~170 orders/s is the ceiling of a
-single instance. The lever is running more workers, not a bigger one — the
+single instance. The lever is running more workers, not a bigger one: the
 consumer is already stateless and idempotent, which is what makes that safe.
 
 ## Design decisions
@@ -258,9 +259,9 @@ A few choices worth calling out, with the reasoning behind them:
   `@conveyor/core` and are consumed by both the API and the web app, so the two
   cannot drift out of sync.
 - **Selectable event transport.** The API can publish via SNS (prod) or straight
-  to SQS (local), chosen by config — the same code path runs in both.
+  to SQS (local), chosen by config, and the same code path runs in both.
 - **Polling over WebSockets, for now.** The console refreshes via SWR polling
-  (~2–3s) — simple, robust, and plenty for an ops view. SSE/WebSockets are a
+  (~2–3s), which is simple, robust, and plenty for an ops view. SSE/WebSockets are a
   deliberate future upgrade, not premature complexity.
 - **LocalStack in development.** SQS/SNS run locally via LocalStack to mirror AWS
   without cost, keeping dev and prod on the same APIs.
@@ -287,9 +288,9 @@ A pnpm + Turborepo monorepo:
 
 ```
 apps/
-  api        NestJS — REST + Swagger; accepts orders, exposes metrics & DLQ ops
-  worker     Resilient consumer — SQS/SNS, retries, backoff, DLQ, circuit breaker
-  web        Next.js ops console — auth + real-time charts over the API
+  api        NestJS: REST + Swagger; accepts orders, exposes metrics & DLQ ops
+  worker     Resilient consumer: SQS/SNS, retries, backoff, DLQ, circuit breaker
+  web        Next.js ops console: auth + real-time charts over the API
 packages/
   core       Shared domain types & API contracts (single source of truth)
   db         Drizzle schema, migrations and client
@@ -307,7 +308,7 @@ pnpm db:migrate   # apply Drizzle migrations
 pnpm dev          # runs api + worker + web via Turborepo
 ```
 
-Each app reads its config from a local `.env` — copy the `.env.example` in each
+Each app reads its config from a local `.env`: copy the `.env.example` in each
 `apps/*` folder and adjust as needed.
 
 | Service            | URL                          |
@@ -334,24 +335,26 @@ pnpm format        # prettier --write
 - [x] `api`: NestJS REST + Swagger (submit orders, read status, paginated list)
 - [x] `api`: observability endpoints (metrics summary, queue & DLQ depth)
 - [x] Postgres schema + migrations (orders, processing log, dead letters, metrics)
-- [x] `web`: ops console — live throughput, queue depth, message status
+- [x] `web`: ops console with live throughput, queue depth, message status
 - [x] `worker`: persist failed attempts, dead letters and breaker transitions
 - [x] `api`: dead-letter inspection + replay, breaker state, failure series
 - [x] `web`: DLQ inspection + replay, circuit-breaker state
-- [x] `web`: real authentication (Auth.js) — GitHub OAuth + read-only demo
+- [x] `web`: real authentication (Auth.js), GitHub OAuth + read-only demo
 - [x] k6 load tests + documented results in this README
-- [ ] CI (lint, test, build) + Docker images
+- [x] CI (GitHub Actions): format, lint, typecheck, test, build
+- [ ] Docker images (multi-stage, per app)
 - [ ] Deploy (Railway) with public Swagger + live dashboard demo
 
 ## How this was built
 
 Built with an AI-assisted workflow (Claude Code). Architecture, design decisions
 and code review are mine. Every change passed the same gate before it was
-committed — format, lint, typecheck, build and tests, plus an end-to-end run
-against the real stack — which caught runtime bugs the type system couldn't,
+committed (format, lint, typecheck, build and tests, plus an end-to-end run
+against the real stack), which caught runtime bugs the type system couldn't,
 like the worker never loading its `.env` and Auth.js rejecting every sign-in
-outside dev. The k6 load tests were written and run by Claude Code in an
-automated loop.
+outside dev. GitHub Actions now re-runs the checks and tests (not the
+end-to-end run) on every push and pull request. The k6 load tests were written
+and run by Claude Code in an automated loop.
 
 ## License
 
