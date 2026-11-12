@@ -346,6 +346,13 @@ build arg, because Next inlines it into the browser bundle, and `AUTH_URL` must
 be set to the console's public URL, because the standalone server binds to
 `0.0.0.0` and Auth.js would otherwise build its callback URLs from that.
 
+Migrations ship inside the API image and run as a one-off command before the new
+release starts, needing only `DATABASE_URL`:
+
+```bash
+docker run --rm -e DATABASE_URL=postgres://... conveyor-api node dist/migrate.js
+```
+
 ## Roadmap
 
 - [x] Monorepo scaffold (pnpm + Turborepo, shared `core` package)
