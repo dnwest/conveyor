@@ -327,6 +327,25 @@ pnpm test          # run unit tests
 pnpm format        # prettier --write
 ```
 
+### Docker images
+
+Each app has a multi-stage Dockerfile, built from the repository root. The image
+prunes the monorepo to that app with `turbo prune`, ships production
+dependencies only and runs as the unprivileged `node` user.
+
+```bash
+docker build -f apps/api/Dockerfile -t conveyor-api .
+docker build -f apps/worker/Dockerfile -t conveyor-worker .
+docker build -f apps/web/Dockerfile -t conveyor-web \
+  --build-arg NEXT_PUBLIC_API_URL=https://api.example.com .
+```
+
+Configuration comes from the environment at runtime, as documented in each
+`.env.example`. The web image has two specifics: `NEXT_PUBLIC_API_URL` is a
+build arg, because Next inlines it into the browser bundle, and `AUTH_URL` must
+be set to the console's public URL, because the standalone server binds to
+`0.0.0.0` and Auth.js would otherwise build its callback URLs from that.
+
 ## Roadmap
 
 - [x] Monorepo scaffold (pnpm + Turborepo, shared `core` package)
@@ -342,7 +361,7 @@ pnpm format        # prettier --write
 - [x] `web`: real authentication (Auth.js), GitHub OAuth + read-only demo
 - [x] k6 load tests + documented results in this README
 - [x] CI (GitHub Actions): format, lint, typecheck, test, build
-- [ ] Docker images (multi-stage, per app)
+- [x] Docker images (multi-stage, per app)
 - [ ] Deploy (Railway) with public Swagger + live dashboard demo
 
 ## How this was built
